@@ -1,188 +1,78 @@
-¡Entendido! Quieres usar la API de Gemini directamente usando el curl que proporcionaste, sin habilitar la API de Vertex AI ni usar la integración de Spring AI para Vertex AI. Es decir, quieres usar la API de Gemini directamente con tu clave API.
+# Spring Boot AI Chat
 
-Esto es totalmente posible y válido. En este caso, no necesitarías las dependencias de Vertex AI en Spring AI.
+Este proyecto es una aplicación web simple construida con Spring Boot que utiliza la API de Gemini para responder preguntas a través de una interfaz de usuario sencilla.
 
-Cómo puedes hacerlo en tu proyecto Spring Boot:
+## Características
 
-Elimina la dependencia de Spring AI Vertex AI:
+*   Interfaz de usuario web creada con HTML, CSS (Bootstrap 5) y JavaScript.
+*   Interacción con la API de Gemini para generar respuestas a las preguntas del usuario.
+*   Uso de un backend con Spring Boot.
+*   Configuración de la clave API de Gemini a través de variables de entorno.
 
-En tu archivo pom.xml (si usas Maven) o build.gradle (si usas Gradle), elimina la dependencia que añadimos para Vertex AI:
+## Pre-requisitos
 
-Maven:
+Antes de ejecutar la aplicación, asegúrate de tener instalado lo siguiente:
 
-<dependency>
-      <groupId>org.springframework.ai</groupId>
-      <artifactId>spring-ai-vertex-ai-gemini</artifactId>
-    </dependency>
-content_copy
-download
-Use code with caution.
-Xml
+*   Java Development Kit (JDK) 17 o superior.
+*   Maven.
+*   Un editor de código o IDE (IntelliJ IDEA, VS Code, Eclipse, etc.).
+*   Una clave API de Gemini de Google.
 
-Asegúrate de que tu proyecto se reconstruya después de eliminar la dependencia.
+## Configuración
 
-Mantén la dependencia de Spring Web: Necesitas la dependencia de spring-web para construir tu API REST.
+1.  **Clona el repositorio:**
+    ```bash
+    git clone <URL_DEL_REPOSITORIO>
+    cd <NOMBRE_DEL_REPOSITORIO>
+    ```
 
-Crea un nuevo servicio o modifica el existente (AiService.java en nuestro ejemplo anterior), para ejecutar el curl que proporcionaste:
+2.  **Configura la clave API de Gemini:**
 
-package com.example.springaigeminiapp;
+    *   Crea un archivo `application.properties` (o `application.yml`) en `src/main/resources`.
+    *   Añade la clave API en el archivo:
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+        ```properties
+        gemini.api-key=<TU_API_KEY>
+        ```
+        o en caso de yml
+        ```yaml
+        gemini:
+          api-key: <TU_API_KEY>
+        ```
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+        Reemplaza `<TU_API_KEY>` con tu clave API real.
 
+3.  **Construye la aplicación:**
+    ```bash
+    mvn clean install
+    ```
 
-@Service
-public class AiService {
+## Ejecución
 
-    @Value("${gemini.api-key}")
-    private String geminiApiKey;
+1.  **Ejecuta la aplicación:**
 
-    public String generateResponse(String userPrompt) throws IOException {
+    ```bash
+    mvn spring-boot:run
+    ```
+    O si usas un IDE, puedes ejecutar directamente la clase principal `SpringAiGeminiAppApplication.java`
 
-        String apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey;
-        String requestBody = String.format("{\n" +
-                "  \"contents\": [{\n" +
-                "    \"parts\":[{\"text\": \"%s\"}]\n" +
-                "    }]\n" +
-                "   }", userPrompt);
-        URL url = new URL(apiUrl);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+2.  **Abre la interfaz en el navegador:**
 
-        connection.setRequestMethod("POST");
-        connection.setRequestProperty("Content-Type", "application/json");
-        connection.setDoOutput(true);
+    Abre tu navegador web y ve a `http://localhost:8080/`.
 
-        try(OutputStream os = connection.getOutputStream()) {
-            byte[] input = requestBody.getBytes(StandardCharsets.UTF_8);
-            os.write(input, 0, input.length);
-        }
+3.  **Escribe tu pregunta:**
 
-        int responseCode = connection.getResponseCode();
+    Introduce tu pregunta en el campo de texto y haz clic en el botón "Preguntar".
 
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
-                String inputLine;
-                StringBuilder response = new StringBuilder();
-                while ((inputLine = in.readLine()) != null) {
-                    response.append(inputLine);
-                }
+4.  **Visualiza la respuesta:**
 
-                return extractTextFromResponse(response.toString());
-            }
-        } else {
-            throw new IOException("Error en la respuesta HTTP: " + responseCode);
-        }
-    }
+    La respuesta generada por Gemini aparecerá en la pantalla.
 
-    private String extractTextFromResponse(String jsonResponse) {
-        // Implementar la lógica para extraer el texto del JSON de respuesta de Gemini
-        // Esto depende de la estructura del JSON de respuesta
-        // Este es un ejemplo, puede necesitar ajustes
-        int startIndex = jsonResponse.indexOf("\"text\": \"") + 9;
-        int endIndex = jsonResponse.indexOf("\"", startIndex);
+## Dependencias
 
-        if (startIndex > 8 && endIndex > startIndex) {
-            return jsonResponse.substring(startIndex, endIndex);
-        }
+*   **Spring Boot:** Para la creación de la aplicación.
+*   **Spring Web:** Para la creación de APIs REST.
+*   **Thymeleaf (opcional):** Para la generación de páginas web con plantillas.
+*   **Bootstrap 5:** Para los estilos de la interfaz de usuario.
 
-        return jsonResponse; // Devolver el JSON completo si no se encuentra el texto
-    }
-}
-content_copy
-download
-Use code with caution.
-Java
-
-Actualiza el application.properties (o application.yml):
-
-Añade tu clave API de Gemini en application.properties o application.yml.
-
-gemini.api-key=<TU_API_KEY>
-content_copy
-download
-Use code with caution.
-Properties
-
-O si prefieres YAML:
-
-gemini:
-api-key: <TU_API_KEY>
-content_copy
-download
-Use code with caution.
-Yaml
-
-Reemplaza <TU_API_KEY> con tu clave API real.
-
-Mantén el controlador AiController igual (o ajusta el llamado al nuevo servicio si lo has renombrado).
-
-package com.example.springaigeminiapp;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.io.IOException;
-
-@RestController
-public class AiController {
-
-    @Autowired
-    private AiService aiService;
-
-    @GetMapping("/ask")
-    public String ask(@RequestParam String question) throws IOException {
-        return aiService.generateResponse(question);
-    }
-}
-content_copy
-download
-Use code with caution.
-Java
-
-Explicación:
-
-Hemos eliminado la dependencia de Spring AI Vertex AI.
-
-El servicio AiService ahora ejecuta directamente el comando curl a través de código Java.
-
-Hemos añadido la clave API en application.properties para no tenerla directamente en el código.
-
-Hemos añadido la lógica necesaria para parsear la respuesta JSON de Gemini y extraer el texto generado.
-
-¿Qué hemos conseguido?
-
-Estamos usando directamente la API de Gemini sin Spring AI Vertex AI.
-
-Tenemos el control total de la solicitud a la API.
-
-No dependemos de la configuración y las abstracciones de Spring AI.
-
-Podemos personalizar completamente la interacción con la API de Gemini.
-
-Consideraciones:
-
-Este enfoque requiere más código manual para construir la solicitud, manejar la respuesta y gestionar la autenticación.
-
-Es menos "elegante" que la abstracción de Spring AI pero es funcional.
-
-En caso de que cambies de proveedor de modelos, tendrías que cambiar el código de nuevo.
-
-Prueba la API:
-
-Ejecuta tu aplicación Spring Boot y prueba la API /ask con tu pregunta, como antes. Debería funcionar.
-
-En Resumen:
-
-Hemos ajustado el proyecto para usar directamente la API de Gemini con un curl en Java, sin usar la librería de Spring AI para Vertex AI. Este enfoque es válido si quieres tener más control sobre la interacción con la API o si no quieres usar la integración de Spring AI.
-
-¿Hay algo más que quieras saber o modificar en el código? ¡Estoy listo para ayudarte!
+## Estructura del Proyectoificar en el código? ¡Estoy listo para ayudarte!
